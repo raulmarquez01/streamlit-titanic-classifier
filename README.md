@@ -1,112 +1,38 @@
-# Data Science Project Boilerplate
+# Supervivencia en el Titanic: app de Streamlit
 
-This boilerplate is designed to kickstart data science projects by providing a basic setup for database connections, data processing, and machine learning model development. It includes a structured folder organization for your datasets and a set of pre-defined Python packages necessary for most data science tasks.
+Clasificador de supervivencia del Titanic (random forest) desplegado como app de Streamlit.
 
-## Structure
+**App en vivo:** se añadirá tras el despliegue.
 
-The project is organized as follows:
+## Qué hace
 
-- **`src/app.py`** → Main Python script where your project will run.
-- **`src/explore.ipynb`** → Notebook for exploration and testing. Once exploration is complete, migrate the clean code to `app.py`.
-- **`src/utils.py`** → Auxiliary functions, such as database connection.
-- **`requirements.txt`** → List of required Python packages.
-- **`models/`** → Will contain your SQLAlchemy model classes.
-- **`data/`** → Stores datasets at different stages:
-  - **`data/raw/`** → Raw data.
-  - **`data/interim/`** → Temporarily transformed data.
-  - **`data/processed/`** → Data ready for analysis.
+Estima la probabilidad de que un pasajero sobreviviera a partir de su clase, sexo, edad, familiares a bordo, tarifa y puerto de embarque. Los controles toman sus rangos de los datos de entrenamiento y la app avisa cuando un valor queda fuera de ellos.
 
+## Método
 
-## ⚡ Initial Setup in Codespaces (Recommended)
+- Datos: `train.csv` de Kaggle (891 pasajeros), con partición estratificada 80/20 (712 entrenamiento, 179 prueba, semilla 42).
+- Preprocesado en un `Pipeline` de scikit-learn: imputación de edad con indicador de faltante, log de la tarifa, escalado y one-hot de las categóricas.
+- Selección por validación cruzada de 5 folds, con reglas fijadas antes de ver resultados: entre cinco candidatos se eligió random forest, y entre 32 combinaciones de hiperparámetros la de menor profundidad dentro de una desviación del mejor F1.
+- Modelo final: random forest, 300 árboles, `max_depth=3`, `min_samples_leaf=5`, `max_features=0,5`.
 
-No manual setup is required, as **Codespaces is automatically configured** with the predefined files created by the academy for you. Just follow these steps:
+## Resultados
 
-1. **Wait for the environment to configure automatically**.
-   - All necessary packages and the database will install themselves.
-   - The automatically created `username` and `db_name` are in the **`.env`** file at the root of the project.
-2. **Once Codespaces is ready, you can start working immediately**.
+En el conjunto de prueba (179 pasajeros, evaluado una sola vez): accuracy 0,788 (línea base 0,615), F1 0,694, AUC 0,830. Detecta el 62 % de los supervivientes y acierta el 78 % de las veces que predice supervivencia.
 
+## Limitaciones
 
-## 💻 Local Setup (Only if you can't use Codespaces)
+- La prueba tiene solo 69 supervivientes, así que las cifras tienen un margen de error amplio.
+- El ajuste de hiperparámetros no mejoró de forma demostrable al modelo por defecto (diferencias dentro del ruido entre folds).
+- Datos de un único barco en 1912: describe patrones históricos y no sirve para predecir nada real.
+- En el plan gratuito de Render la app se duerme tras un rato sin visitas y la primera carga tarda unos segundos.
 
-**Prerequisites**
+## Estructura
 
-Make sure you have Python 3.11+ installed on your machine. You will also need pip to install the Python packages.
+- `notebook/eda.ipynb`: análisis, selección, evaluación y generación de los archivos de la app.
+- `src/app.py`: app de Streamlit. `src/model/`: modelo y límites. `src/requirements.txt`: dependencias con versiones fijadas.
+- `models/`: copia del modelo guardado desde el notebook.
 
-**Installation**
+## Ejecutar en local
 
-Clone the project repository to your local machine.
-
-Navigate to the project directory and install the required Python packages:
-
-```bash
-pip install -r requirements.txt
-```
-
-**Create a database (if necessary)**
-
-Create a new database within the Postgres engine by customizing and executing the following command:
-
-```bash
-$ psql -U postgres -c "DO \$\$ BEGIN 
-    CREATE USER my_user WITH PASSWORD 'my_password'; 
-    CREATE DATABASE my_database OWNER my_user; 
-END \$\$;"
-```
-Connect to the Postgres engine to use your database, manipulate tables, and data:
-
-```bash
-$ psql -U my_user -d my_database
-```
-
-Once inside PSQL, you can create tables, run queries, insert, update, or delete data, and much more!
-
-**Environment Variables**
-
-Create a .env file in the root directory of the project to store your environment variables, such as your database connection string:
-
-```makefile
-DATABASE_URL="postgresql://<USER>:<PASSWORD>@<HOST>:<PORT>/<DB_NAME>"
-
-#example
-DATABASE_URL="postgresql://my_user:my_password@localhost:5432/my_database"
-```
-
-## Running the Application
-
-To run the application, execute the app.py script from the root directory of the project:
-
-```bash
-python src/app.py
-```
-
-## Adding Models
-
-To add SQLAlchemy model classes, create new Python script files within the models/ directory. These classes should be defined according to your database schema.
-
-Example model definition (`models/example_model.py`):
-
-```py
-from sqlalchemy.orm import declarative_base
-from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column
-
-Base = declarative_base()
-
-class ExampleModel(Base):
-    __tablename__ = 'example_table'
-    id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(unique=True)
-```
-
-## Working with Data
-
-You can place your raw datasets in the data/raw directory, intermediate datasets in data/interim, and processed datasets ready for analysis in data/processed.
-
-To process data, you can modify the app.py script to include your data processing steps, using pandas for data manipulation and analysis.
-
-## Contributors
-
-This template was built as part of the [Data Science and Machine Learning Bootcamp](https://4geeksacademy.com/us/coding-bootcamps/datascience-machine-learning) by 4Geeks Academy by [Alejandro Sanchez](https://twitter.com/alesanchezr) and many other contributors. Learn more about [4Geeks Academy BootCamp programs](https://4geeksacademy.com/us/programs) here.
-
-Other templates and resources like this can be found on the school's GitHub page.
+    pip install -r src/requirements.txt
+    streamlit run src/app.py
