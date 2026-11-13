@@ -2,7 +2,7 @@
 
 Clasificador de supervivencia del Titanic (random forest) desplegado como app de Streamlit.
 
-**App en vivo:** se añadirá tras el despliegue.
+**App en vivo:** https://streamlit-titanic-classifier.onrender.com
 
 ## Qué hace
 
